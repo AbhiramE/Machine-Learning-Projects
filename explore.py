@@ -56,9 +56,54 @@ def currencyDist():
     print merged_df
 
 
+def durationDist(start, end):
+    end_day = end
+    start = start * 24 * 60 * 60
+    end = end * 24 * 60 * 60
+
+    df = pd.read_csv('train.csv')
+    df['duration'] = df.apply(lambda row: float(row['deadline']) - row['launched_at'], axis=1)
+    df = df[['duration', 'final_status']]
+
+    new_df = df[start <= df['duration']]
+    new_df = new_df[end > new_df['duration']]
+
+    print end_day, len(new_df), new_df.groupby(['final_status']).size() / len(new_df)
+    print "\n"
+
+
+def communication_dist():
+    df = pd.read_csv('train.csv')
+    df = df[['disable_communication', 'final_status']]
+    disabled_df = df[df['disable_communication'] == False]
+    new_df = df[True == df['disable_communication']]
+
+    print len(new_df), len(disabled_df)
+    # print len(new_df), new_df.groupby(['final_status']).size()
+    # print len(disabled_df), disabled_df.groupby(['final_status']).size()
+    print "\n"
+
+
+def keywords():
+    df = pd.read_csv('train.csv')
+    print df[['keywords', 'name']]
+
+
+def state_change():
+    df = pd.read_csv('train.csv')
+    df['state_changed_before'] = df.apply(lambda row: row['deadline'] > row['state_changed_at'], axis=1)
+    df = df[['state_changed_before', 'final_status']]
+
+    print df.groupby(['final_status', 'state_changed_before']).size()
+
+
 # goal_lengths = [0, 1000, 10000, 20000, 100000, 1000000, 1000000000]
 # for i in range(1, len(goal_lengths)):
 #    goalDist(goal_lengths[i - 1], goal_lengths[i])
 
 
-currencyDist()
+# duration_lengths = [0, 5, 10, 15, 20, 25, 30, 35, 45, 60]
+# for i in range(1, len(duration_lengths)):
+#    durationDist(duration_lengths[i - 1], duration_lengths[i])
+
+countryDist()
