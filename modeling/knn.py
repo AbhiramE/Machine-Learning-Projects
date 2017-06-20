@@ -55,21 +55,15 @@ def hyperparameter_selection(trainX, trainY, testX, testY):
 
 
 def classify(trainX, trainY, testX, project_ids):
-    clf = KNeighborsClassifier(n_neighbors=290)
+    clf = KNeighborsClassifier(n_neighbors=10)
     clf.fit(trainX, trainY)
-
+    predictions = clf.predict(testX)
     print trainX.shape
     test_matrix = []
+    f = open('submission.csv', 'w')
     for i in range(0, len(testX)):
-        prediction = clf.predict(testX[i])
-        row = np.array([str(project_ids[i][0]), int(prediction[0])])
-
-        if len(test_matrix) == 0:
-            test_matrix = row
-        else:
-            test_matrix = np.vstack([test_matrix, row])
-
-    np.savetxt('submission.csv', test_matrix, delimiter=',')
+        f.write("\""+str(project_ids[i][0])+"\","+str(predictions[i])+"\n")
+    f.close()
 
 
 def pipeline():
