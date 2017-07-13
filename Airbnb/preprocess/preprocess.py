@@ -24,6 +24,21 @@ def build_features(amenities, amenities_matrix):
                          'review_scores_rating']]
     features = pd.concat([features, pd.DataFrame(data=amenities_matrix.T, columns=amenities)], axis=1)
 
-    print list(features)
+    # Converting also t to true and f to false
+    for tf_feature in ['host_is_superhost', 'host_identity_verified', 'host_has_profile_pic',
+                       'is_location_exact', 'requires_license', 'instant_bookable',
+                       'require_guest_profile_picture', 'require_guest_phone_verification']:
+        features[tf_feature] = listings[tf_feature].map(lambda s: False if s == "f" else True)
+
+    # Encoding all categorical features using in built Pandas function
+    for categorical_feature in ['neighbourhood_cleansed', 'property_type', 'room_type', 'bed_type']:
+        features = pd.concat([features, pd.get_dummies(listings[categorical_feature])], axis=1)
+
+    # Filling the empty values with the median of that column
+    for col in features.columns[features.isnull().any()]:
+        features[col] = features[col].fillna(features[col].median())
+
+    # Removing lisitings crazily prized
+    data = features.query('price <= 600')
 
 preprocess(listings)
