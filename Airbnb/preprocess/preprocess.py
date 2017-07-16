@@ -1,10 +1,11 @@
 import numpy as np
 import pandas as pd
+from sklearn.model_selection import train_test_split
 
 listings = pd.read_csv("../data/listings.csv")
 
 
-def preprocess(lisitings):
+def preprocess():
     listings['price'] = listings['price'].map(lambda p: int(p[1:-3].replace(",", "")))
     listings['amenities'] = listings['amenities'].map(
         lambda a: "|".join([amn.replace("}", "").replace("{", "").replace('"', "")
@@ -15,7 +16,7 @@ def preprocess(lisitings):
 
     print amenities_matrix
 
-    build_features(amenities, amenities_matrix)
+    return build_features(amenities, amenities_matrix)
 
 
 def build_features(amenities, amenities_matrix):
@@ -40,5 +41,13 @@ def build_features(amenities, amenities_matrix):
 
     # Removing lisitings crazily prized
     data = features.query('price <= 600')
+    y = data['price']
+    X = data.drop('price', axis='columns')
 
-preprocess(listings)
+    return X, y
+
+X, y = preprocess()
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+X_train, X_validate, y_train, y_validate = train_test_split(X_train, y_train, test_size=0.2)
+
+
