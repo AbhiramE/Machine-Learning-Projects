@@ -1,6 +1,10 @@
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from sklearn.feature_selection import SelectKBest
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.pipeline import Pipeline
+from sklearn.metrics import mean_squared_error
 
 listings = pd.read_csv("../data/listings.csv")
 
@@ -46,8 +50,21 @@ def build_features(amenities, amenities_matrix):
 
     return X, y
 
+
+def pipeline(X_train, y_train, X_validate, y_validate):
+    select = SelectKBest(k=100)
+    clf = RandomForestRegressor()
+    steps = [('feature_selection', select),
+             ('random_forest', clf)]
+
+    pipeline = Pipeline(steps)
+    pipeline.fit(X_train, y_train)
+    y_prediction = pipeline.predict(X_validate)
+    rmse = mean_squared_error(y_validate, y_prediction)
+    print(rmse ** 0.5)
+
+
 X, y = preprocess()
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 X_train, X_validate, y_train, y_validate = train_test_split(X_train, y_train, test_size=0.2)
-
-
+pipeline(X_train, y_train, X_validate, y_validate)
