@@ -10,6 +10,7 @@ listings = pd.read_csv("../data/listings.csv")
 
 
 def preprocess():
+    listings = pd.read_csv("../data/listings.csv")
     listings['price'] = listings['price'].map(lambda p: int(p[1:-3].replace(",", "")))
     listings['amenities'] = listings['amenities'].map(
         lambda a: "|".join([amn.replace("}", "").replace("{", "").replace('"', "")
@@ -52,10 +53,8 @@ def build_features(amenities, amenities_matrix):
 
 
 def pipeline(X_train, y_train, X_validate, y_validate):
-    select = SelectKBest(k=100)
-    clf = RandomForestRegressor()
-    steps = [('feature_selection', select),
-             ('random_forest', clf)]
+    clf = RandomForestRegressor(n_estimators=2000)
+    steps = [('random_forest', clf)]
 
     pipeline = Pipeline(steps)
     pipeline.fit(X_train, y_train)
