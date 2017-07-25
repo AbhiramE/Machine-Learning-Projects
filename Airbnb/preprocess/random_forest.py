@@ -19,7 +19,7 @@ def preprocess():
     amenities = np.unique(np.concatenate(listings['amenities'].map(lambda amns: amns.split("|"))))[1:]
     amenities_matrix = np.array([listings['amenities'].map(lambda amns: amn in amns) for amn in amenities])
 
-    print amenities_matrix
+    print (amenities_matrix)
 
     return build_features(amenities, amenities_matrix)
 

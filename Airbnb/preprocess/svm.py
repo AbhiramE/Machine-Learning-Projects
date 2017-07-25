@@ -1,9 +1,11 @@
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import GradientBoostingRegressor
-from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import train_test_split
+from sklearn.feature_selection import RFE
+from sklearn.svm import SVR
+from sklearn.pipeline import Pipeline
 from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import GridSearchCV
 
 listings = pd.read_csv("../data/listings.csv")
 
@@ -50,21 +52,26 @@ def build_features(amenities, amenities_matrix):
     return X, y
 
 
-# Cross Validate
+def pipeline(X_train, y_train, X_validate, y_validate):
+    clf = GridSearchCV(SVR(), cv=5,
+                       param_grid={'kernel': ('linear', 'rbf'), "C": [1e0, 1e1, 1e2, 1e3],
+                                   "gamma": np.logspace(-2, 2, 5)})
+    clf.fit(X_train, y_train)
+
+    print("Grid search done")
+
+    clf = SVR(kernel=clf.best_params_['kernel'], C=clf.best_params_['C'], gamma=clf.best_params_['gamma'])
+    rfe = RFE(estimator=clf, n_features_to_select=50, step=1)
+    steps = [('svr', clf),
+             ('feature_selection', rfe)]
+    pipeline = Pipeline(steps)
+    pipeline.fit(X_train, y_train)
+    y_prediction = pipeline.predict(X_validate)
+    rmse = mean_squared_error(y_validate, y_prediction)
+    print(rmse ** 0.5)
+
+
 X, y = preprocess()
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 X_train, X_validate, y_train, y_validate = train_test_split(X_train, y_train, test_size=0.2)
-gsearch = GridSearchCV(
-    estimator=GradientBoostingRegressor(learning_rate=0.1, min_samples_split=500, min_samples_leaf=50,
-                                        max_depth=8, max_features='sqrt', subsample=0.8, random_state=10),
-    param_grid={'n_estimators': range(1100, 2000, 100)}, n_jobs=4, iid=False, cv=5)
-gsearch.fit(X_train, y_train)
-
-# Regress
-clf = GradientBoostingRegressor(learning_rate=0.1, min_samples_split=500, min_samples_leaf=50,
-                                max_depth=8, max_features='sqrt', subsample=0.8, random_state=10,
-                                n_estimators=gsearch.best_params_['n_estimators'])
-clf.fit(X_train, y_train)
-y_prediction = clf.predict(X_validate)
-rmse = mean_squared_error(y_validate, y_prediction)
-print(rmse ** 0.5)
+pipeline(X_train, y_train, X_validate, y_validate)
